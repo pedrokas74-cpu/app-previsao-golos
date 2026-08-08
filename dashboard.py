@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+import zipfile
 from datetime import datetime
 
 # ==========================================
@@ -31,26 +32,42 @@ def carregar_dados(ficheiro_dados, is_historico):
         
     if ficheiro_real:
         try:
-            if ficheiro_real.endswith('.zip') or ficheiro_real.endswith('.csv'):
-                # OTIMIZAÇÃO CRÍTICA DE MEMÓRIA AQUI:
-                colunas_usar = ['Div', 'HomeTeam', 'AwayTeam', 'FTHG', 'FTAG', 'HTHG', 'HTAG']
-                
+            colunas_usar = ['Div', 'HomeTeam', 'AwayTeam', 'FTHG', 'FTAG', 'HTHG', 'HTAG']
+            
+            # TRATAMENTO BLINDADO DE FICHEIROS ZIP
+            if ficheiro_real.endswith('.zip'):
+                with zipfile.ZipFile(ficheiro_real, 'r') as z:
+                    # Encontra o primeiro ficheiro .csv lá dentro, ignorando pastas ou lixo
+                    ficheiros_csv = [f for f in z.namelist() if f.endswith('.csv')]
+                    
+                    if not ficheiros_csv:
+                        st.error("⚠️ Erro: Não existe nenhum ficheiro .csv dentro do ZIP.")
+                        return pd.DataFrame()
+                        
+                    nome_csv = ficheiros_csv[0]
+                    with z.open(nome_csv) as f:
+                        try:
+                            df = pd.read_csv(f, usecols=colunas_usar, low_memory=True)
+                        except ValueError:
+                            f.seek(0) # Volta ao inicio se falhar
+                            df = pd.read_csv(f, low_memory=True)
+                            
+            elif ficheiro_real.endswith('.csv'):
                 try:
                     df = pd.read_csv(ficheiro_real, usecols=colunas_usar, low_memory=True)
                 except ValueError:
-                     df = pd.read_csv(ficheiro_real, low_memory=True)
-                
-                # Converte textos para 'category' -> Poupa 90% da RAM!
-                for col in ['Div', 'HomeTeam', 'AwayTeam']:
-                    if col in df.columns:
-                        df[col] = df[col].astype('category')
-                        
-                # Converte golos para números inteiros pequenos
-                for col in ['FTHG', 'FTAG', 'HTHG', 'HTAG']:
-                    if col in df.columns:
-                        df[col] = pd.to_numeric(df[col], downcast='integer')
+                    df = pd.read_csv(ficheiro_real, low_memory=True)
             else:
                 df = pd.read_excel(ficheiro_real)
+            
+            # Limpeza e Otimização de Memória
+            for col in ['Div', 'HomeTeam', 'AwayTeam']:
+                if col in df.columns:
+                    df[col] = df[col].astype('category')
+                    
+            for col in ['FTHG', 'FTAG', 'HTHG', 'HTAG']:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], downcast='integer')
             
             df = df.rename(columns={
                 'Div': 'Liga_Codigo',
@@ -62,7 +79,6 @@ def carregar_dados(ficheiro_dados, is_historico):
                 'FTAG': 'Golos_FT_Fora'
             })
             
-            # PROTEÇÃO: Se a base de dados não tiver colunas HT de todo, criamos vazias
             if 'Golos_HT_Casa' not in df.columns:
                 df['Golos_HT_Casa'] = np.nan
             if 'Golos_HT_Fora' not in df.columns:
@@ -75,7 +91,7 @@ def carregar_dados(ficheiro_dados, is_historico):
             
             return df
         except Exception as e:
-            st.error(f"Erro a ler: {e}")
+            st.error(f"Erro a ler os dados: {e}")
             return pd.DataFrame()
     return pd.DataFrame()
 
