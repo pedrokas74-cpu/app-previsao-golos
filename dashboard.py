@@ -11,14 +11,25 @@ st.set_page_config(page_title="Previsão de Golos", page_icon="⚽", layout="wid
 st.title("⚽ Dashboard Inteligente de Golos (Monte Carlo)")
 
 DICIONARIO_LIGAS = {
-    'E0': 'Inglaterra - Premier League', 'E1': 'Inglaterra - Championship', 'E2': 'Inglaterra - League 1',
+    'E0': 'Inglaterra - Premier League', 
+    'E1': 'Inglaterra - Championship (D2)', 
+    'E2': 'Inglaterra - League 1 (D3)', 
+    'E3': 'Inglaterra - League 2 (D4)',
+    'SC0': 'Escócia - Premiership', 
+    'SC1': 'Escócia - Championship (D2)',
     'P1': 'Portugal - Primeira Liga',
-    'SP1': 'Espanha - La Liga', 'SP2': 'Espanha - Segunda Divisão',
-    'I1': 'Itália - Serie A', 'I2': 'Itália - Serie B',
-    'D1': 'Alemanha - Bundesliga', 'D2': 'Alemanha - 2. Bundesliga',
-    'F1': 'França - Ligue 1', 'F2': 'França - Ligue 2',
-    'N1': 'Holanda - Eredivisie', 'B1': 'Bélgica - Pro League',
-    'T1': 'Turquia - Super Lig', 'G1': 'Grécia - Super League', 'SC0': 'Escócia - Premiership'
+    'SP1': 'Espanha - La Liga', 
+    'SP2': 'Espanha - Segunda Divisão',
+    'I1': 'Itália - Serie A', 
+    'I2': 'Itália - Serie B',
+    'D1': 'Alemanha - Bundesliga', 
+    'D2': 'Alemanha - 2. Bundesliga',
+    'F1': 'França - Ligue 1', 
+    'F2': 'França - Ligue 2',
+    'N1': 'Holanda - Eredivisie', 
+    'B1': 'Bélgica - Pro League',
+    'T1': 'Turquia - Super Lig', 
+    'G1': 'Grécia - Super League'
 }
 
 @st.cache_data(show_spinner=False)
